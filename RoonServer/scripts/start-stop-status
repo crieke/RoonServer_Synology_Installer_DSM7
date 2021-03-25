@@ -1,0 +1,176 @@
+#!/bin/sh
+
+# Package
+PACKAGE="RoonServer"
+DNAME="Roon Server"
+USER="root"
+SPK_ROOT="/var/packages/${PACKAGE}/target"
+ROON_LOG_FILE="/dev/null"
+ROON_LIB_DIR="/usr/local/lib"
+ROON_ID_DIR="${SPK_ROOT}/id"
+ROON_DATABASE_SHARE="$(get_section_key_value $SPK_ROOT/RoonServer.ini General database_dir)"
+ROON_DATABASE_DIR="$(get_section_key_value /usr/syno/etc/share_right.map $ROON_DATABASE_SHARE path)"
+ALSA_CONF="/usr/local/etc/alsa/alsa.conf"
+ARCH=$(uname -m)
+ROON_PIDFILE="${SPK_ROOT}/RoonServer.pid"
+KERNELMODULE="soundcore snd-page-alloc snd snd-seq-device snd-rawmidi snd-usbmidi-lib snd-usb-lib snd-hwdep snd-timer snd-pcm snd-usb-audio snd-mixer-oss snd-pcm-oss"
+SYNO_MODEL="$(get_key_value /etc/synoinfo.conf upnpmodelname)"
+SYNO_VERSION="$(get_key_value /etc.defaults/VERSION productversion)"
+SYNO_BUILD="$(get_key_value /etc.defaults/VERSION buildnumber)"
+SYNO_SMALL_FIX="$(get_key_value /etc.defaults/VERSION smallfixnumber)"
+SYNO_SPK_VER="$(get_key_value /var/packages/RoonServer/INFO version)"
+SYNO_SPK_VER=`cat /var/packages/${PACKAGE}/INFO | grep "version=" | cut -d "\"" -f 2`
+ROON_VERSION=`cat "${SPK_ROOT}/RoonServer/VERSION"`
+MTU=`ifconfig | grep eth[0-9] -A1 | grep MTU | cut -d ":" -f 2 | awk '{print $1}' | xargs | sed "s/ ---- /\n---- /g"`
+ROON_DEBUG_EXTERNAL_LOG="${ROON_DATABASE_DIR}/ROON_DEBUG_EXTERNAL_LOG.txt"
+ROON_ARGS="-noraatserver"
+ls -lha "{$SPK_ROOT}"
+echo $ROON_DATABASE_DIR
+
+if [[ -f $ROON_DEBUG_EXTERNAL_LOG ]]; then
+    ROON_LOG_FILE=$ROON_DEBUG_EXTERNAL_LOG
+fi
+
+ST_COLOR="\033[38;5;34m"
+HL_COLOR="\033[38;5;197m"
+REG_COLOR="\033[0m"
+
+## Log Function
+echolog() {
+    TIMESTAMP=$(date +%d.%m.%y-%H:%M:%S)
+    if [[ $# == 2 ]]; then
+        PARAMETER1=$1
+        PARAMETER2=$2
+        echo -e "${ST_COLOR}${TIMESTAMP}${REG_COLOR} --- ${HL_COLOR}${PARAMETER1}:${REG_COLOR} ${PARAMETER2}"
+        echo "${TIMESTAMP} --- ${PARAMETER1}: ${PARAMETER2}" >> $ROON_LOG_FILE
+    elif [[ $# == 1 ]]; then
+        PARAMETER1=$1
+        echo -e "${ST_COLOR}${TIMESTAMP}${REG_COLOR} --- ${PARAMETER1}"
+        echo "${TIMESTAMP} --- ${PARAMETER1}" >> $ROON_LOG_FILE
+    else
+        echo -e "The echolog function requires 1 or 2 parameters."
+    fi
+}
+
+if [[ -f $ROON_PIDFILE ]]; then
+   PID=`cat "${ROON_PIDFILE}"`
+fi
+
+if [[ $SYNO_SMALL_FIX -gt 0 ]]; then
+   SYNO_SMALL_FIX="(Update ${SYNO_SMALL_FIX})"
+else
+   SYNO_SMALL_FIX="";
+fi
+
+info ()
+{
+    ## Echoing System Info
+    echolog "ROON_DATABASE_DIR" "${ROON_DATABASE_DIR}"
+    echolog "ROON_DIR" "${SPK_ROOT}"
+    echolog "Model" "${SYNO_MODEL}"
+    echolog "Architecture" "${ARCH}"
+    echolog "DSM Version" "${SYNO_VERSION} ${SYNO_SMALL_FIX}"
+    echolog "PKG Version" "${SYNO_SPK_VER}"
+    echolog "Hostname" "${HOSTNAME}"
+    echolog "MTU" "${MTU}"
+}
+
+start_daemon ()
+{
+    # Launch the service in the background if RoonServer share exists.
+    if [[ "$ROON_DATABASE_DIR" != "" ]]; then
+
+        info
+        if [[ -f $ROON_DATABASE_DIR/ROON_DEBUG_LAUNCH_PARAMETERS.txt ]]; then
+            ROON_ARGS="$ROON_ARGS $(cat $ROON_DATABASE_DIR/ROON_DEBUG_LAUNCH_PARAMETERS.txt)"
+        fi
+
+        echolog "ROON_DEBUG_ARGS" "${ROON_ARGS}"
+        # Launch RoonServer
+        export ROON_DATAROOT=${ROON_DATABASE_DIR}
+        export LD_LIBRARY_PATH=${ROON_LIB_DIR}:${LD_LIBRARY_PATH}
+        export ALSA_CONFIG_PATH=${ALSA_CONF}
+        export ROON_ID_DIR
+        ${SPK_ROOT}/RoonServer/start.sh $ROON_ARGS &
+        echo $! > ${ROON_PIDFILE}
+
+        echolog "RoonServer PID" "`cat ${ROON_PIDFILE}`"
+
+        echo "" | tee -a "${ROON_LOG_FILE}"
+        echo "" | tee -a "${ROON_LOG_FILE}"
+        echo "########## Installed RoonServer Version ##########" | tee -a "${ROON_LOG_FILE}"
+        echo "${ROON_VERSION}" | tee -a "${ROON_LOG_FILE}"
+        echo "##################################################" | tee -a "${ROON_LOG_FILE}"
+        echo "" | tee -a "${ROON_LOG_FILE}"
+        echo "" | tee -a "${ROON_LOG_FILE}"
+    else
+        echolog "RoonServer shared folder does not exist or external storage device has not been setup properly."
+        return 1
+    fi
+
+}
+
+stop_daemon ()
+{
+    echolog "Roon PID to be killed" "$PID"
+    kill $PID | tee -a "${ROON_LOG_FILE}"
+    wait_for_status 1 20 || kill -9 $PID
+    echolog "##### RoonServer has been stopped. #####"
+    rm "${ROON_PIDFILE}"
+}
+
+daemon_status ()
+{
+    ## Check with ps command if RoonServer is running. If RoonServer updates itself, the PID changes.
+    if [[ "$PID" != "" ]] && kill -0 $PID > /dev/null 2>&1; then
+        return
+    fi
+    return 1
+}
+
+wait_for_status ()
+{
+    counter=$2
+    while [[ ${counter} -gt 0 ]]; do
+        daemon_status
+        [[ $? -eq $1 ]] && return
+        let counter=counter-1
+        sleep 1
+    done
+    return 1
+}
+
+case $1 in
+    start)
+        if daemon_status; then
+            echo ${DNAME} is already running
+        else
+            echo "" > $ROON_LOG_FILE
+            echolog "Starting ${DNAME} ..."
+            start_daemon
+        fi
+        ;;
+    stop)
+        if daemon_status; then
+            echolog "Stopping ${DNAME}..."
+            stop_daemon
+        else
+            echo ${DNAME} is not running
+        fi
+        ;;
+    status)
+        if daemon_status; then
+            echo ${DNAME} is running
+            exit 0
+        else
+            echo ${DNAME} is not running
+            exit 1
+        fi
+        ;;
+    log)
+        echo ${ROON_LOG_FILE}
+        ;;
+    *)
+        exit 1
+        ;;
+esac

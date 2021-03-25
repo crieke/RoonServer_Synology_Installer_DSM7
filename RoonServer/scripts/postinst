@@ -1,0 +1,12 @@
+#!/bin/sh
+
+## Create config file for database location on first install
+if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then 
+	echo "[General]" >> "${SYNOPKG_PKGDEST}/RoonServer.ini"
+	echo "database_dir=" >> "${SYNOPKG_PKGDEST}/RoonServer.ini"
+	echo "time=$(date +%Y-%m-%d-%H-%M)"	>> "${SYNOPKG_PKGDEST}/RoonServer.ini"
+	## Set database name according to wizard
+	set_section_key_value ${SYNOPKG_PKGDEST}/RoonServer.ini General database_dir "$pkgwizard_database_share"
+fi
+exit 0
+

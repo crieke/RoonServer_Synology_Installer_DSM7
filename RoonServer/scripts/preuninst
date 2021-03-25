@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Stop the package
+${SSS} stop > /dev/null
+    
+exit 0

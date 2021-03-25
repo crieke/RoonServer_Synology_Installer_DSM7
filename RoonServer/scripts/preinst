@@ -1,0 +1,63 @@
+#!/bin/sh
+
+## Download RoonServer files on initial setup (not on upgrade)
+if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then 
+	# Package
+	PACKAGE="RoonServer"
+	
+	# Others
+	SSS="/var/packages/${PACKAGE}/scripts/start-stop-status"
+	ROON_PKG_URL="http://download.roonlabs.com/builds/RoonServer_linuxx64.tar.bz2"
+	ROON_ARCHIVE="${ROON_PKG_URL##*/}"
+	R=0
+
+	## Get real path of database name
+	ROON_DATA_DIR="$(get_section_key_value /usr/syno/etc/share_right.map RoonServer path)"
+	
+	## Check if RoonServer tar.bz is provided manually in database dir
+	
+	ROON_DATABASE_PATH="$(get_section_key_value /usr/syno/etc/share_right.map $pkgwizard_database_share path)"
+	ROON_OFFLINE_ARCHIVE="${ROON_DATABASE_PATH}/${ROON_ARCHIVE}"
+	## Create tmp directory
+	tmp_dir=$(mktemp -d -t RoonServer-XXXXXXXXXX)
+    pushd "${tmp_dir}" > /dev/null
+
+	## Getting binary file and extract it to unique tmp directory
+    if [ $pkgwizard_offline_install ] && [ -f ${ROON_OFFLINE_ARCHIVE} ]; then
+		## Use RoonServer tar.bz from database dir if exists
+        cp "${ROON_OFFLINE_ARCHIVE}" "${tmp_dir}"/ > /dev/null
+        R=$?
+            if [ $R -ne 0 ]; then
+                ERRORMESSAGE="Local installation archive in database directory could not been copied to the tmp directory."
+            fi
+    else
+		## Download RoonServer binary from roonlabs website
+        pushd /tmp > /dev/null
+        curl -s -O "${ROON_PKG_URL}"
+        R=$?
+        if [ $R -ne 0 ]; then
+			# Check domain, url, space on tmpdir and print error message
+            PKGDOMAIN=`echo "$ROON_PKG_URL" | awk -F/ '{print $3}'`
+            DOMAINCHECK=`/bin/curl -sL -w "%{http_code} %{url_effective}\\n" "$PKGDOMAIN" -o /dev/null | awk '{print $1}'`
+            TMPSPACE=`/bin/df -Ph /tmp | tail -1 | awk '{print $4}'`
+            wait 5;
+            ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $DOMAINCHECK<br><b>Available space in /tmp:</b> $TMPSPACE"
+        fi
+    fi
+
+	## Go on and extract the tar.bz2 file, if there has been no error
+	if [ $R -eq 0 ]; then
+        tar xjf RoonServer_linuxx64.tar.bz2 -C "${SYNOPKG_PKGINST_TEMP_DIR}" > /dev/null
+        if [ $R -ne 0 ]; then
+        R=$?
+            ERRORMESSAGE="An error occured while extracting the installation archive. The archive might be corrupt or the tmp directory has no space left."
+        fi
+    fi
+    rm -d "${tmp-dir}"
+    popd > /dev/null
+fi
+
+if [ $R -ne 0 ]; then
+	echo "$ERRORMESSAGE"
+fi
+exit $R

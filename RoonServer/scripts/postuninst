@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Delete Package directory if it contains nothing.
+if [ ! -d "$(ls -A /usr/syno/etc/packages/${PACKAGE})" ]; then
+    rm -Rf /usr/syno/etc/packages/${PACKAGE}
+fi
+
+exit 0

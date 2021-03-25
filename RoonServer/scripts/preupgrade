@@ -1,0 +1,11 @@
+#!/bin/sh
+
+## Move RoonServer executable files to temp dir. These will be updated by the RoonServer application itself
+mv ${SYNOPKG_PKGDEST}/RoonServer ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer
+
+## Move config to temp dir, if it exists
+if [ -f "${SYNOPKG_PKGDEST}/RoonServer.ini" ]; then
+	mv ${SYNOPKG_PKGDEST}/RoonServer.ini ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer.ini
+fi
+
+exit 0

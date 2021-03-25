@@ -1,0 +1,75 @@
+[{
+    "step_title": "Where should your database be stored?",
+    "items": [{
+        "type": "combobox",
+        "desc": "Please specify, where Roon Server should store its database files.",
+		"invalid_next_disabled_v2": true,
+        "subitems": [{
+            "key": "pkgwizard_database_share",
+            "desc": "Roon Server's Database Directory",
+            "displayField": "name",
+            "valueField": "name",
+            "editable": false,
+            "mode": "remote",
+            "api_store": {
+                "api": "SYNO.FileStation.List",
+                "method": "list_share",
+                "version": 1,
+				"baseParams": {
+					"limit": 0,
+					"offset": 2
+				},
+                "root": "shares",
+                "idProperty": "name",
+                "fields": ["name"]
+            },
+            "validator": {
+                "fn": "{console.log(arguments);return true;}"
+            }
+        }]
+    }]
+},{
+    "step_title": "Specify your Music directory",
+    "items": [{
+        "type": "combobox",
+        "desc": "Please specify, where you have stored your music files. The installer will grant Roon Server read access to this shared folder, so it can be accessed and added as a storage location in Roon.",
+        "subitems": [{
+            "key": "pkgwizard_music_share",
+            "desc": "Music Directory",
+            "displayField": "name",
+            "valueField": "name",
+            "editable": false,
+            "mode": "remote",
+            "api_store": {
+                "api": "SYNO.FileStation.List",
+                "method": "list_share",
+                "version": 1,
+				"baseParams": {
+					"limit": 0,
+					"offset": 2
+				},
+                "root": "shares",
+                "idProperty": "name",
+                "fields": ["name"]
+            },
+            "validator": {
+                "fn": "{console.log(arguments);return true;}"
+            }
+        }]
+    }]
+},{
+    "step_title": "Retrieve Roon Server files automatically?",
+    "items": [{
+		"type": "singleselect",
+		"desc": "In case your diskstation has issues downloading the Roon Server application from roonlabs, the installer can check your previously chosen database folder for the required file (\"RoonServer_linuxx64.tar.bz2\") and install Roon Server offline.",
+		"subitems": [{
+			"key": "pkgwizard_online_install",
+			"desc": "Online installation (recommended!)",
+			"defaultValue": true
+		},{
+			"key": "pkgwizard_offline_install",
+			"desc": "Offline installation",
+			"defaultValue": false
+		}]
+	}]
+}];
