@@ -1,0 +1,82 @@
+[{
+    "step_title": "Where should your database be stored?",
+    "items": [{
+        "type": "combobox",
+        "desc": "Please specify, on which shared folder Roon Server should store its database files and on which shared folder your Music media files are stored.",
+        "invalid_next_disabled_v2": true,
+        "subitems": [{
+            "key": "WIZARD_DATABASE_DIR",
+            "desc": "🗃️ - Roon Server's database",
+            "displayField": "name",
+            "defaultValue": "Please select",
+            "valueField": "name",
+            "forceSelection": true,
+            "title": "Roon Server database",
+            "editable": false,
+            "api_store": {
+                "api": "SYNO.FileStation.List",
+                "method": "list_share",
+                "version": 2,
+                "root": "shares",
+                "idProperty": "name",
+                "fields": ["name"]
+            },
+            "validator": {
+                "fn": "{var dbshare=arguments[0];var d=dbshare != \"homes\" && dbshare != \"home\" && dbshare != \"Please select\"; if (!d) return 'Please choose a different shared folder for your database.';return true;}"
+            }
+        },{
+            "key": "WIZARD_MUSIC_DIR",
+            "desc": "🎵 - Music Directory",
+            "displayField": "name",
+            "defaultValue": "Please select",
+            "valueField": "name",
+            "forceSelection": true,
+            "title": "Location of Music media files",
+            "editable": false,
+            "api_store": {
+                "api": "SYNO.FileStation.List",
+                "method": "list_share",
+                "version": 2,
+                "root": "shares",
+                "idProperty": "name",
+                "fields": ["name"]
+            },
+            "validator": {
+                "fn": "{var musicshare=arguments[0];var m=musicshare != \"homes\" && musicshare != \"home\" && musicshare != \"Please select\";if (!m) return 'Please choose a different shared folder for your music files.';return true;}"
+            }
+        },{
+            "key": "WIZARD_HIDDEN_FIELD",
+            "desc": "This is a placeholder field. It is a workaround, as it seems the last combobox in the PKG-WIZARD always gets filled with the first entry.",
+            "displayField": "name",
+            "defaultValue": "Nothing to select here.",
+            "valueField": "name",
+            "forceSelection": true,
+            "title": "PLACEHOLDER",
+            "editable": false,
+            "hidden": true,
+            "api_store": {
+                "api": "SYNO.FileStation.List",
+                "method": "list_share",
+                "version": 2,
+                "root": "shares",
+                "idProperty": "name",
+                "fields": ["name"]
+            }
+        }]
+    }]
+},{
+    "step_title": "Retrieve Roon Server automatically from the Internet?",
+    "items": [{
+        "type": "singleselect",
+        "desc": "In case your diskstation has issues downloading the Roon Server application from Roon Labs, the installer can check your specified database shared folder for the required file (\"RoonServer_linuxx64.tar.bz2\") and install Roon Server offline.",
+        "subitems": [{
+            "key": "ONLINEINSTALL",
+            "desc": "Online installation (recommended!)",
+            "defaultValue": true
+        },{
+            "key": "OFFLINEINSTALL",
+            "desc": "Offline installation",
+            "defaultValue": false
+        }]
+    }]
+}];

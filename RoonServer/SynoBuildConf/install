@@ -14,7 +14,8 @@ create_package_tgz() {
 	local package_tgz_dir=/tmp/_package_tgz
 #	local binary_dir=$package_tgz_dir/usr/local/bin
 #	local lib_dir=$package_tgz_dir/usr/local/lib
-#	local etc_dir=$package_tgz_dir/usr/local/etc
+	local etc_dir=$package_tgz_dir/etc
+	local sbin_dir=$package_tgz_dir/sbin
 	
 	### clear destination directory
 	rm -rf $package_tgz_dir && mkdir -p $package_tgz_dir
@@ -22,11 +23,12 @@ create_package_tgz() {
 	### install needed file into PKG_DIR
 #	mkdir -p $binary_dir
 #	mkdir -p $lib_dir
-#	mkdir -p $etc_dir
-	cp -av ui $package_tgz_dir
+	mkdir -p $etc_dir
+	mkdir -p $sbin_dir
 #	make install DESTDIR="$package_tgz_dir"
 #	cp -av "usr/local/lib/libasound.so.2.0.0" "$lib_dir/libasound.so.2"
-#	cp -avr "RoonServer.ini" "$etc_dir"
+	cp -avr etc/* $etc_dir/
+	cp -avr sbin/getsharelocation $sbin_dir
 #	cp -avr "usr/local/etc/alsa" "$etc_dir"
 
 	### create package.tgz $1: source_dir $2: dest_dir
@@ -36,10 +38,11 @@ create_package_tgz() {
 create_spk(){
 
 	cp -av scripts $PKG_DIR/scripts
+	cp -av scripts $PKG_DIR/scripts
 	cp -av PACKAGE_ICON*.PNG $PKG_DIR
 	cp -av WIZARD_UIFILES $PKG_DIR
+	mv $PKG_DIR/WIZARD_UIFILES/install_uifile.json $PKG_DIR/WIZARD_UIFILES/install_uifile
 	cp -av conf $PKG_DIR
-	cp -av ui $PKG_DIR
 	cp -av LICENSE $PKG_DIR
 
 	./INFO.sh > INFO

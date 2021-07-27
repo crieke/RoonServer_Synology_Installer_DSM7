@@ -1,12 +1,43 @@
 #!/bin/sh
+ROON_ROOT="/var/packages/RoonServer"
 
+ROON_DATABASE_SHARE_PATH="$($ROON_ROOT/target/sbin/getsharelocation $WIZARD_DATABASE_DIR)"
+ROON_DATABASE_DIR="${ROON_DATABASE_SHARE_PATH}/RoonOnNAS"
+
+## Create directory for Roon ID
+mkdir ${ROON_ROOT}/home/id
 ## Create config file for database location on first install
-if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then 
-	echo "[General]" >> "${SYNOPKG_PKGDEST}/RoonServer.ini"
-	echo "database_dir=" >> "${SYNOPKG_PKGDEST}/RoonServer.ini"
-	echo "time=$(date +%Y-%m-%d-%H-%M)"	>> "${SYNOPKG_PKGDEST}/RoonServer.ini"
-	## Set database name according to wizard
-	set_section_key_value ${SYNOPKG_PKGDEST}/RoonServer.ini General database_dir "$pkgwizard_database_share"
+
+if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
+	echo "[General]" > "${ROON_ROOT}/etc/RoonServer.ini"
+	echo "database_dir=$WIZARD_DATABASE_DIR" >> "${ROON_ROOT}/etc/RoonServer.ini"
 fi
+
+##Check if Roon Server database exists in chosen db-path
+if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonServer" ] && [ -d "$ROON_DATABASE_SHARE_PATH/RAATServer" ] && [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ]; then
+	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
+	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
+	mv "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	mv "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonGoer" ]; then
+		mv "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	fi
+fi
+
+[ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
+[ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
+
+{
+  echo "<br><br><p style='color:blue'>Note: Roon Server can only access your specified music directory.</p><br>"
+  echo "This is how you set access to additional music shares:<br><br>"
+  echo "1. Open <strong>Control Panel</strong> and select <strong>Shared Folder</strong>.<br>"
+  echo "2. Select the share which should be accessed by Roon Server and click <strong>Edit</strong>.<br>"
+  echo "3. Click the <strong>Permissions</strong> tab.<br>"
+  echo "4. Change the dropdown from <strong>Local Users</strong> to <strong>System internal user</strong>.<br>"
+  echo "5. Check the <strong>Read</strong> checkbox for <strong>RoonServer</strong> user.<br>"
+  echo "6. Click <strong>Save</strong> to confirm the new permissions.<br>"
+  echo "7. Repeat steps 2-6 for additional shared folders.<br>"
+	} >> "$SYNOPKG_TEMP_LOGFILE"
+
 exit 0
 

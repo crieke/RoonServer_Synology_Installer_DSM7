@@ -1,18 +1,18 @@
 {
    "data-share": {
-      "shares": [ 
-         {
-            "name": "{{pkgwizard_database_share}}", 
-            "permission": {
-               "rw": ["RoonServer"]
-            }
-         },
-         {
-            "name": "{{pkgwizard_music_share}}", 
-            "permission": {
-               "ro": ["RoonServer"]
-            }
+      "shares": [{
+         "name": "{{WIZARD_DATABASE_DIR}}", 
+         "permission": {
+            "rw": ["RoonServer"]
          }
-      ]
+      },{
+         "name": "{{WIZARD_MUSIC_DIR}}", 
+         "permission": {
+            "ro": ["RoonServer"]
+         }
+      }]
+   },
+   "port-config": {
+      "protocol-file": "etc/RoonServer.sc"
    }
 }
