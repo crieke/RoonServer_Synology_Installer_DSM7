@@ -15,5 +15,6 @@ support_url="https://community.roonlabs.com"
 helpurl="https://community.roonlabs.com"
 os_min_ver="7.0-40000"
 beta="yes"
+thirdparty="yes"
 [ "$(caller)" != "0 NULL" ] && return 0
 pkg_dump_info
