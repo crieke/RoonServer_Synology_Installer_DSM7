@@ -14,30 +14,114 @@ if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
 fi
 
 ##Check if Roon Server database exists in chosen db-path
-if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonServer" ] && [ -d "$ROON_DATABASE_SHARE_PATH/RAATServer" ] && [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ]; then
+if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonServer" ] && [ -d "$ROON_DATABASE_SHARE_PATH/RAATServer" ] && [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ]; then ## Add check if shared folder is "RoonServer" as well!
 	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
 	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
-	mv "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
-	mv "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	mkdir "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup"
+	cp -R "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	mv "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
+  cp -R  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+  mv  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
 	if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonGoer" ]; then
-		mv "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
-	fi
+		cp -R "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+		mv "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
+	fi      
 fi
 
 [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
 [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
 
-{
-  echo "<br><br><p style='color:blue'>Note: Roon Server can only access your specified music directory.</p><br>"
-  echo "This is how you set access to additional music shares:<br><br>"
-  echo "1. Open <strong>Control Panel</strong> and select <strong>Shared Folder</strong>.<br>"
-  echo "2. Select the share which should be accessed by Roon Server and click <strong>Edit</strong>.<br>"
-  echo "3. Click the <strong>Permissions</strong> tab.<br>"
-  echo "4. Change the dropdown from <strong>Local Users</strong> to <strong>System internal user</strong>.<br>"
-  echo "5. Check the <strong>Read</strong> checkbox for <strong>RoonServer</strong> user.<br>"
-  echo "6. Click <strong>Save</strong> to confirm the new permissions.<br>"
-  echo "7. Repeat steps 2-6 for additional shared folders.<br>"
-	} >> "$SYNOPKG_TEMP_LOGFILE"
 
+## Writing folder info txt files
+case $SYNOPKG_DSM_LANGUAGE in
+enu)
+  {
+	echo "This folder contains the Roon Server database folder of your DSM6 Roon Server installation."
+	echo "It has been copied to the new directory \"RoonOnNAS\" during installation."
+	echo ""
+	echo "This folder is not needed for Roon Server on DSM7 anymore and can be deleted, if everything is working as expected."
+  } > "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/Info about this folder.txt"
+  {
+	echo "You can provide your own version of ffmpeg in this folder."
+	echo ""
+	echo "ffmpeg is a software component of your diskstation. However it might not include all required audio codecs. Therefore Roon might not be able to play some media files."
+	echo "If you provide your own version of ffmpeg in this folder, you'll need to restart Roon Server afterwards in the Synology package center."
+  } > "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin/Info about this folder.txt"
+  ;;
+ger)
+  {
+	echo "Dieser Ordner enthält die Datenbank deines Roon Server Installation unter DSM6."
+	echo "Sie wurde während der Installation in das Verzeichnis \"RoonOnNAS\" kopiert."
+	echo ""
+	echo "Für die Verwendung von Roon Server unter DSM7 wird dieser Ordner nicht weiter benötigt und kann gelöscht werden, sofern alles einwandfrei funktioniert."
+  } > "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/Info zu diesem Ordner.txt"
+  {
+	echo "In diesem Ordner kann eine eigene ffmpeg Version bereitgestellt werden."
+	echo ""
+	echo "ffmpeg ist Systembestandteil deiner Diskstation. Allerdings unterstützt die Systemversion nicht zwingend alle benötigten Audiocodecs, wordurch Roon unter Umständen nicht alle Audioformate wiedergeben kann."
+	echo "Sofern eine eigene Version von ffmpeg bereitgestellt wird, muss Roon Server im Anschluss neu gestartet werden."
+  } > "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin/Info zu diesem Ordner.txt"
+  ;;
+*)
+  {
+	echo "This folder contains the Roon Server database folder of your DSM6 Roon Server installation."
+	echo "It has been copied to the new directory \"RoonOnNAS\" during installation."
+	echo ""
+	echo "This folder is not needed for Roon Server on DSM7 anymore and can be deleted, if everything is working as expected."
+  } > "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/Info about this folder.txt"
+  {
+	echo "You can provide your own version of ffmpeg in this folder."
+	echo ""
+	echo "ffmpeg is a software component of your diskstation. However it might not include all required audio codecs. Therefore Roon might not be able to play some media files."
+	echo "If you provide your own version of ffmpeg in this folder, you'll need to restart Roon Server afterwards in the Synology package center."
+  } > "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin/Info about this folder.txt"
+  ;;
+esac
+
+## Info after new installation
+if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
+  case $SYNOPKG_DSM_LANGUAGE in
+	enu)
+	  {
+		echo "<br><br><p style='color:blue'>Note: Roon Server can only access your specified music directory.</p><br>"
+		echo "This is how you set access to additional music shares:<br><br>"
+		echo "1. Open <strong>Control Panel</strong> and select <strong>Shared Folder</strong>.<br>"
+		echo "2. Select the share which should be accessed by Roon Server and click <strong>Edit</strong>.<br>"
+		echo "3. Click the <strong>Permissions</strong> tab.<br>"
+		echo "4. Change the dropdown from <strong>Local Users</strong> to <strong>System internal user</strong>.<br>"
+		echo "5. Check the <strong>Read</strong> checkbox for <strong>RoonServer</strong> user.<br>"
+		echo "6. Click <strong>Save</strong> to confirm the new permissions.<br>"
+		echo "7. Repeat steps 2-6 for additional shared folders.<br>"
+		  } >> "$SYNOPKG_TEMP_LOGFILE"
+	  ;;
+	ger)
+	  {
+		echo "<br><br><p style='color:blue'><strong>HINWEIS:</strong> Roon Server kann ausschließlich auf deine angegebene Verzeichnisse zugreifen.</p><br>"
+		echo "So kannst du weitere Freigaben für Roon Server zugänglich machen:<br><br>"
+		echo "1. Öffne die <strong>Systemsteuerung</strong> und wähle <strong>Freigegebene Ordner</strong>.<br>"
+		echo "2. Wähle die Freigabe aus, auf die Roon Server Zugriff erhalten soll und klicke auf <strong>Bearbeiten</strong>.<br>"
+		echo "3. Klicke auf den <strong>Berechtigungen</strong> tab.<br>"
+		echo "4. Wechsel im Ausklappmenü von <strong>Lokale Benutzer</strong> zu <strong>Interner Systembenutzer</strong>.<br>"
+		echo "5. Setze für den Benutzer <strong>RoonServer</strong> ein Häkchen bei <strong>Schreibgeschützt</strong> für Leseberichtigungen oder bei <strong>Lesen/Schreiben</strong>, sofern Roon Server auch Schreibzugriff benötigt (erfoderlich z.B. für Roons Backupfunktion).<br>"
+		echo "6. Bestätige die Berechtigungen über die <strong>Speichern</strong> Schaltfäche.<br>"
+		echo "7. Wiederhole Schritte 2-6 für weitere benötigten Freigabeordner.<br>"
+		  } >> "$SYNOPKG_TEMP_LOGFILE"
+	  ;;
+	*)
+	  {
+		echo "<br><br><p style='color:blue'>Note: Roon Server can only access your specified music directory.</p><br>"
+		echo "This is how you set access to additional music shares:<br><br>"
+		echo "1. Open <strong>Control Panel</strong> and select <strong>Shared Folder</strong>.<br>"
+		echo "2. Select the share which should be accessed by Roon Server and click <strong>Edit</strong>.<br>"
+		echo "3. Click the <strong>Permissions</strong> tab.<br>"
+		echo "4. Change the dropdown from <strong>Local Users</strong> to <strong>System internal user</strong>.<br>"
+		echo "5. Check the <strong>Read</strong> checkbox for <strong>RoonServer</strong> user.<br>"
+		echo "6. Click <strong>Save</strong> to confirm the new permissions.<br>"
+		echo "7. Repeat steps 2-6 for additional shared folders.<br>"
+		  } >> "$SYNOPKG_TEMP_LOGFILE"
+	  ;;
+	esac
+  fi
 exit 0
+
 

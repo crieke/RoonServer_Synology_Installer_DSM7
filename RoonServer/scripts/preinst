@@ -27,11 +27,31 @@ if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
             cp "${ROON_OFFLINE_ARCHIVE}" "${tmp_dir}"/ > /dev/null
             R=$?
                 if [ $R -ne 0 ]; then
-                    ERRORMESSAGE="Local installation archive in database directory could not been copied to the tmp directory."
+                    case $SYNOPKG_DSM_LANGUAGE in
+                        enu)
+                            ERRORMESSAGE="<br>Local installation archive in database directory could not been copied to the tmp directory."
+                            ;;
+                        ger)
+                            ERRORMESSAGE="<br>Lokale Installationsdatei konnte nicht ins temporäre Verzeichnis (/tmp) kopiert werden."
+                            ;;
+                        *)
+                            ERRORMESSAGE="<br>Local installation archive in database directory could not been copied to the tmp directory."
+                            ;;
+                        esac
                 fi
         else
             R=1
-            ERRORMESSAGE="Could not locate local installation archive. File not found: ${ROON_OFFLINE_ARCHIVE}"
+            case $SYNOPKG_DSM_LANGUAGE in
+                enu)
+                    ERRORMESSAGE="Could not locate local installation archive.<br><br>File not found:<br>${ROON_OFFLINE_ARCHIVE}"
+                    ;;
+                ger)
+                    ERRORMESSAGE="Es wurde keine lokale Installationsdatei gefunden.<br><br>Datei nicht gefunden:<br>${ROON_OFFLINE_ARCHIVE}"
+                    ;;
+                *)
+                    ERRORMESSAGE="Could not locate local installation archive.<br><br>File not found:<br>${ROON_OFFLINE_ARCHIVE}"
+                    ;;
+            esac    
         fi
     else
         ## Download RoonServer binary from roonlabs website
@@ -43,19 +63,39 @@ if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
             DOMAINCHECK=`/bin/curl -sL -w "%{http_code} %{url_effective}\\n" "$PKGDOMAIN" -o /dev/null | awk '{print $1}'`
             TMPSPACE=`/bin/df -Ph /tmp | tail -1 | awk '{print $4}'`
             wait 5;
-            ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $DOMAINCHECK<br><b>Available space in /tmp:</b> $TMPSPACE"
+            case $SYNOPKG_DSM_LANGUAGE in
+                enu)
+                    ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $DOMAINCHECK<br><b>Available space in /tmp:</b> $TMPSPACE"
+                    ;;
+                ger)
+                    ERRORMESSAGE="Download benötigter Dateien von der Roon Labs Webseite ist fehlgeschlagen. Bitte prüfe deine Internetverbindung.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP Statuscode:</b> $DOMAINCHECK<br><b>Verfügbarer Speicher (/tmp):</b> $TMPSPACE"
+                    ;;
+                *)
+                    ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $DOMAINCHECK<br><b>Available space in /tmp:</b> $TMPSPACE"
+                    ;;
+            esac
         fi
     fi
 
     ## Go on and extract the tar.bz2 file, if there has been no error
     if [ $R -eq 0 ]; then
-        tar xjf RoonServer_linuxx64.tar.bz2 -C "${SYNOPKG_PKGINST_TEMP_DIR}" > /dev/null
-        if [ $R -ne 0 ]; then
+        tar xjf RoonServer_linuxx64.tar.bz2 -C "${SYNOPKG_PKGINST_TEMP_DIR}"
         R=$?
-            ERRORMESSAGE="An error occured while extracting the installation archive. The archive might be corrupt or the tmp directory has no space left."
+        if [ $R -ne 0 ]; then
+            case $SYNOPKG_DSM_LANGUAGE in
+                enu)
+                    ERRORMESSAGE="An error occured while extracting the installation archive. The archive might be corrupt or the tmp directory has no space left."
+                    ;;
+                ger)
+                    ERRORMESSAGE="Es ist ein Fehler beim Entpacken des geladenen Roon Server Datei aufgetreten. Die Datei ist entweder beschädigt oder es ist nicht ausreichend freier Speicherplatz im tmp Verzeichnis verfügbar."
+                    ;;
+                *)
+                    ERRORMESSAGE="An error occured while extracting the installation archive. The archive might be corrupt or the tmp directory has no space left."
+                    ;;
+            esac
         fi
     fi
-    rm -R "${tmp-dir}"
+    rm -R "${tmp_dir}"
     popd > /dev/null
 fi
 
