@@ -1,17 +1,17 @@
 [{
-    "step_title": "Where should your database be stored?",
+    "step_title": "Speicherorte feslegen",
     "items": [{
         "type": "combobox",
-        "desc": "Please specify, on which shared folder Roon Server should store its database files and on which shared folder your Music media files are stored.<br>",
+        "desc": "In welchem Ordner soll Roon Servers Datenbank abgelegt werden und in welchem Ordner befinden sich deine Musikdateien?<br>Roon Server erhält während der Installation die erforderlichen Zugriffsrechte.",
         "invalid_next_disabled_v2": true,
         "subitems": [{
             "key": "WIZARD_DATABASE_DIR",
-            "desc": "🗃️ - Roon Server's database",
+            "desc": "🗃️ - Speicherort Datenbank",
             "displayField": "name",
-            "defaultValue": "Please select",
+            "defaultValue": "Bitte wählen",
             "valueField": "name",
             "forceSelection": true,
-            "title": "Roon Server database",
+            "title": "Datenbank Verzeichnis",
             "editable": false,
             "api_store": {
                 "api": "SYNO.FileStation.List",
@@ -22,16 +22,16 @@
                 "fields": ["name"]
             },
             "validator": {
-                "fn": "{var dbshare=arguments[0];var d=dbshare != \"homes\" && dbshare != \"home\" && dbshare != \"Please select\"; if (!d) return 'Please choose a different shared folder for your database.';return true;}"
+                "fn": "{var dbshare=arguments[0];var d=dbshare != \"homes\" && dbshare != \"home\" && dbshare != \"Bitte wählen\"; if (!d) return 'Bitte wähle einen anderen Freigabeordner für die Datenbank.';return true;}"
             }
         },{
             "key": "WIZARD_MUSIC_DIR",
-            "desc": "🎵 - Music Directory",
+            "desc": "🎵 - Musikdateien",
             "displayField": "name",
-            "defaultValue": "Please select",
+            "defaultValue": "Bitte wählen",
             "valueField": "name",
             "forceSelection": true,
-            "title": "Location of Music media files",
+            "title": "Ort deiner Musikdateien",
             "editable": false,
             "api_store": {
                 "api": "SYNO.FileStation.List",
@@ -42,7 +42,7 @@
                 "fields": ["name"]
             },
             "validator": {
-                "fn": "{var musicshare=arguments[0];var m=musicshare != \"homes\" && musicshare != \"home\" && musicshare != \"Please select\";if (!m) return 'Please choose a different shared folder for your music files.';return true;}"
+                "fn": "{var musicshare=arguments[0];var m=musicshare != \"homes\" && musicshare != \"home\" && musicshare != \"Bitte wählen\";if (!m) return 'Bitte wähle einen anderen Freigabeordner für deine Musikdateien.';return true;}"
             }
         },{
             "key": "WIZARD_HIDDEN_FIELD",
@@ -65,17 +65,17 @@
         }]
     }]
 },{
-    "step_title": "Retrieve Roon Server automatically from the Internet?",
+    "step_title": "Installationsdaten über das Internet laden?",
     "items": [{
         "type": "singleselect",
-        "desc": "In case your diskstation has issues downloading the Roon Server application from Roon Labs, the installer can check your specified database shared folder for the required file (\"RoonServer_linuxx64.tar.bz2\") and install Roon Server offline.",
+        "desc": "Falls deine Diskstation Probleme beim Download der Roon Server Software von der Roon Labs Webseite hat, kann die benötigte Datei (\"RoonServer_linuxx64.tar.bz2\") auch manuell in den festgelegten Datenbank Speicherort kopiert werden, um die Installation offline durchzuführen.",
         "subitems": [{
             "key": "ONLINEINSTALL",
-            "desc": "Online installation (recommended!)",
+            "desc": "Online-Installation (empfohlen!)",
             "defaultValue": true
         },{
             "key": "OFFLINEINSTALL",
-            "desc": "Offline installation",
+            "desc": "Offline-Installation",
             "defaultValue": false
         }]
     }]
