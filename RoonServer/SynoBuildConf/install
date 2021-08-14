@@ -41,7 +41,7 @@ create_spk(){
 	cp -av scripts $PKG_DIR/scripts
 	cp -av PACKAGE_ICON*.PNG $PKG_DIR
 	cp -av WIZARD_UIFILES $PKG_DIR
-	mv $PKG_DIR/WIZARD_UIFILES/install_uifile.json $PKG_DIR/WIZARD_UIFILES/install_uifile
+	find $PKG_DIR/WIZARD_UIFILES/ -type f -name '*.json' | while read f; do mv "$f" "${f%.*}"; done
 	cp -av conf $PKG_DIR
 	cp -av LICENSE $PKG_DIR
 
