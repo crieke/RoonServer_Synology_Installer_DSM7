@@ -84,6 +84,13 @@ start_daemon ()
         export TMP="${ROON_TMP_DIR}"
         export PATH=${ROON_DATABASE_DIR}/bin:$PATH
         export ROON_ID_DIR
+        
+        # Roon tries on launch to set open files limit to 8096. This will fail due to its hard limit. So we are increasing it to the max possible value...
+        openFilesHardLimit=$(ulimit -Hn)
+        if [ $openFilesHardLimit -lt 8192 ]; then
+          ulimit -n $openFilesHardLimit
+        fi
+        
         ${SPK_ROOT}/target/RoonServer/start.sh $ROON_ARGS &
         echo $! > ${ROON_PIDFILE}
 
