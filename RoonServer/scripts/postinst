@@ -18,16 +18,25 @@ if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonServer" ] && [ -d "$ROON_DATABASE_SHARE_
 	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
 	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
 	mkdir "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup"
+
+	# Copy old database files to RoonOnNAS directory to be the owner of the files. Then move it to DSM6_RoonServer_Database_Backup folder.
+
+	# RoonServer folder
 	cp -R "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
 	mv "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
-  cp -R  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
-  mv  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
+
+	# RAATServer folder
+    cp -R  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+    mv  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
+
+	# RoonGoer folder (if exists)
 	if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonGoer" ]; then
 		cp -R "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
 		mv "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
-	fi      
+	fi
 fi
 
+# Create required directories, if they don't exist
 [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
 [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
 
