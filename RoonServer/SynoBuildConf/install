@@ -38,7 +38,6 @@ create_package_tgz() {
 create_spk(){
 
 	cp -av scripts $PKG_DIR/scripts
-	cp -av scripts $PKG_DIR/scripts
 	cp -av PACKAGE_ICON*.PNG $PKG_DIR
 	cp -av WIZARD_UIFILES $PKG_DIR
 	find $PKG_DIR/WIZARD_UIFILES/ -type f -name '*.json' | while read f; do mv "$f" "${f%.*}"; done
