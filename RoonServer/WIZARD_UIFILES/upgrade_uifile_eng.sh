@@ -1,22 +1,32 @@
 #!/bin/bash
 PreVer=$(echo "$SYNOPKG_OLD_PKGVER" | sed 's/[^0-9]//g')
-
-
-/bin/cat > /tmp/wizard.php <<EOF
+wizardFile="$(date +%s)_wizard.php"
+/bin/cat > /tmp/$wizardFile <<EOF
 <?php
 
+\$conf_file = "/var/packages/RoonServer/etc/RoonServer.ini";
+if ( file_exists(\$conf_file) ) {
+  \$RoonServer_conf = parse_ini_file(\$conf_file);
+  \$value_dbPath = \$RoonServer_conf['database_dir'];
+  \$value_hide_dbPath = "TRUE";
+} else {
+  \$value_dbPath = "RoonServer";
+  \$value_hide_dbPath = "TRUE" ;
+}
+
+
 \$STEP1 = array(
-    "step_title" => "Where should your database be stored?",
+    "step_title" => "Where are your music files located?",
     "items" => [array(
         "type" => "combobox",
-        "desc" => "Please specify, on which shared folder Roon Server should store its database files and on which shared folder your Music media files are stored.<br>",
+        "desc" => "The installer could find a previous Roon Server database, which will be used. In order to grant RoonServer read access to your music files, please specify its location.<br>",
         "invalid_next_disabled_v2" => TRUE,
         "subitems" => [array(
             "key" => "WIZARD_DATABASE_DIR",
             "desc" => "🗃️ - Roon Server's database",
             "displayField" => "name",
-            "defaultValue" => "RoonServer",
-            "hidden" => TRUE,
+            "defaultValue" => \$value_dbPath,
+            "hidden" => \$value_hide_dbPath,
             "valueField" => "name",
             "forceSelection" => TRUE,
             "title" => "Roon Server database",
@@ -86,8 +96,8 @@ EOF
 
 
 if [ $PreVer -le 20210308 ]; then
-    WIZARD_STEPS=$(/usr/bin/php -n /tmp/wizard.php)
+    WIZARD_STEPS=$(/usr/bin/php -n /tmp/$wizardFile)
     echo $WIZARD_STEPS > $SYNOPKG_TEMP_LOGFILE
-  rm /tmp/wizard.php
+  rm /tmp/$wizardFile
 fi
 exit 0

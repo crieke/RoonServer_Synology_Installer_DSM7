@@ -1,7 +1,7 @@
 #!/bin/bash
 currentDir="$(dirname "$0")"
-
-/bin/cat > /tmp/wizard.php <<EOF
+wizardFile="$(date +%s)_wizard.php"
+/bin/cat > /tmp/$wizardFile <<EOF
 <?php
 
 \$STEP1 = array(
@@ -104,9 +104,9 @@ echo json_encode(\$WIZARD);
 ?>
 EOF
 
-WIZARD_STEPS=$(/usr/bin/php -n /tmp/wizard.php)
+WIZARD_STEPS=$(/usr/bin/php -n /tmp/$wizardFile)
 if [ ${#WIZARD_STEPS} -gt 5 ]; then
     echo $WIZARD_STEPS > $SYNOPKG_TEMP_LOGFILE
 fi
-  rm /tmp/wizard.php
+  rm /tmp/$wizardFile
 exit 0
