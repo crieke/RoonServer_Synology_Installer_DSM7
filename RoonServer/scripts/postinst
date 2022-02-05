@@ -1,7 +1,16 @@
 #!/bin/sh
 ROON_ROOT="/var/packages/RoonServer"
 
-ROON_DATABASE_SHARE_PATH="$($ROON_ROOT/target/sbin/getsharelocation $WIZARD_DATABASE_DIR)"
+SHARE_CONF="/usr/syno/etc/share_right.map"
+
+# Check if RoonServer.ini exists, if not use values from Wizard
+if [ -f "$ROON_ROOT/etc/RoonServer.ini" ]; then
+	DB_DIR=$(get_section_key_value "$ROON_ROOT/etc/RoonServer.ini" "General" "database_dir")
+else
+	DB_DIR=$WIZARD_DATABASE_DIR
+fi
+
+$ROON_DATABASE_SHARE_PATH="${ROON_ROOT}/shares/${DB_DIR}"
 ROON_DATABASE_DIR="${ROON_DATABASE_SHARE_PATH}/RoonOnNAS"
 
 ## Create directory for Roon ID

@@ -1,17 +1,6 @@
 #!/bin/sh
 
-## Move RoonServer executable files to temp dir. These will be updated by the RoonServer application itself
-if [ -d ${SYNOPKG_PKGDEST}/RoonServer ]; then
-	ROONSERVER_DIR_OWNER=$(stat -c "%U" ${SYNOPKG_PKGDEST}/RoonServer)
-	if [ "$ROONSERVER_DIR_OWNER" != "$USER" ]; then
-		cp -R ${SYNOPKG_PKGDEST}/RoonServer ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer
-	else
-		mv ${SYNOPKG_PKGDEST}/RoonServer ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer
-	fi
-fi
-## Move config to temp dir, if it exists
-if [ -f "${SYNOPKG_PKGDEST}/RoonServer.ini" ]; then
-	mv ${SYNOPKG_PKGDEST}/RoonServer.ini ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer.ini
-fi
-
+	## Move RoonServer executable files to temp dir. These will be updated by the RoonServer application itself
+mv ${SYNOPKG_PKGDEST}/RoonServer ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer
+ 
 exit 0

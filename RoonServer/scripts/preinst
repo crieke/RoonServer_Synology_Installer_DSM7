@@ -11,11 +11,20 @@ if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
     ROON_ARCHIVE="${ROON_PKG_URL##*/}"
     R=0
 
-
     ## Check if RoonServer tar.bz is provided manually in database dir
-    ROON_DATABASE_PATH="$(${SYNOPKG_PKGINST_TEMP_DIR}/sbin/getsharelocation $WIZARD_DATABASE_DIR)"
-
-    ROON_OFFLINE_ARCHIVE="${ROON_DATABASE_PATH}/${ROON_ARCHIVE}"
+    ## Get path from share_right.map as App Folder (../RoonServer/shares is not yet created.
+    SHARE_CONF="/usr/syno/etc/share_right.map"
+    
+    ## function: if no path key is in the share section, check for guid section (relevant for esata/usb shares)
+    check_esatashare_path() {
+     ROON_DATABASE_SHARE_GUID=$(get_section_key_value "$SHARE_CONF" "$WIZARD_DATABASE_DIR" "guid") || exit
+     ROON_DATABASE_SHARE_PATH=$(get_section_key_value "$SHARE_CONF" "$ROON_DATABASE_SHARE_GUID" "path") || exit
+    }
+    
+    ## check path of selected database share. if it fails, run esatashare function
+    ROON_DATABASE_SHARE_PATH=$(get_section_key_value "$SHARE_CONF" "$WIZARD_DATABASE_DIR" "path") || check_esatashare_path
+    
+    ROON_OFFLINE_ARCHIVE="${ROON_DATABASE_SHARE_PATH}/${ROON_ARCHIVE}"
     ## Create tmp directory
     tmp_dir=$(mktemp -d -t RoonServer-XXXXXXXXXX)
 

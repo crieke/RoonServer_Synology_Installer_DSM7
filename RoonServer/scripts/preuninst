@@ -2,5 +2,11 @@
 
 # Stop the package
 ${SSS} stop > /dev/null
-    
+
+#Remove app dirs
+$PKG_Home="/var/packages/RoonServer"
+dir=$(readlink "$PKG_Home/etc") && [ -d "$dir" ] && rm "$dir"
+dir=$(readlink "$PKG_Home/home") && [ -d "$dir" ] && rm "$dir"
+dir=$(readlink "$PKG_Home/var") && [ -d "$dir" ] && rm "$dir"
+
 exit 0

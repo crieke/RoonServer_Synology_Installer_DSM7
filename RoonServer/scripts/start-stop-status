@@ -8,7 +8,7 @@ SPK_ETC="${SPK_ROOT}/etc"
 ROON_ID_DIR="${SPK_ROOT}/home/id/"
 ROON_TMP_DIR="${SPK_ROOT}/tmp"
 ROON_DATABASE_SHARE="$(get_section_key_value $SPK_ETC/RoonServer.ini General database_dir)"
-ROON_DATABASE_SHARE_PATH="$(${SPK_ROOT}/target/sbin/getsharelocation $ROON_DATABASE_SHARE)"
+ROON_DATABASE_SHARE_PATH="${SPK_ROOT}/shares/${ROON_DATABASE_SHARE}" 
 ROON_DATABASE_DIR="${ROON_DATABASE_SHARE_PATH}/RoonOnNAS"
 ROON_LOG_FILE="${ROON_DATABASE_DIR}/RoonOnNAS.log.txt"
 ARCH=$(uname -m)
@@ -67,7 +67,7 @@ start_daemon ()
 {
   info
     # Launch the service in the background if RoonServer share exists.
-    if [[ "$ROON_DATABASE_SHARE_PATH" != "" ]] && [ -d $ROON_DATABASE_DIR ]; then
+    if [[ "$ROON_DATABASE_SHARE_PATH" != "" ]] && [ -d "$ROON_DATABASE_DIR" ]; then
 
         if [[ -f $ROON_DATABASE_DIR/ROON_DEBUG_LAUNCH_PARAMETERS.txt ]]; then
             ROON_ARGS="$ROON_ARGS $(cat $ROON_DATABASE_DIR/ROON_DEBUG_LAUNCH_PARAMETERS.txt)"
