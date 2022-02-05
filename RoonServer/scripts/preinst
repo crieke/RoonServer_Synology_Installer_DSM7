@@ -1,20 +1,20 @@
 #!/bin/sh
 
 ## Download RoonServer files on initial setup (not on upgrade)
-if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then 
+if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
     # Package
     PACKAGE="RoonServer"
-    
+
     # Others
     SSS="/var/packages/${PACKAGE}/scripts/start-stop-status"
     ROON_PKG_URL="http://download.roonlabs.com/builds/RoonServer_linuxx64.tar.bz2"
     ROON_ARCHIVE="${ROON_PKG_URL##*/}"
     R=0
 
-    
+
     ## Check if RoonServer tar.bz is provided manually in database dir
-    ROON_DATABASE_PATH="$(${SYNOPKG_PKGINST_TEMP_DIR}/sbin/getsharelocation $WIZARD_DATABASE_DIR)"  
-        
+    ROON_DATABASE_PATH="$(${SYNOPKG_PKGINST_TEMP_DIR}/sbin/getsharelocation $WIZARD_DATABASE_DIR)"
+
     ROON_OFFLINE_ARCHIVE="${ROON_DATABASE_PATH}/${ROON_ARCHIVE}"
     ## Create tmp directory
     tmp_dir=$(mktemp -d -t RoonServer-XXXXXXXXXX)
@@ -51,27 +51,25 @@ if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
                 *)
                     ERRORMESSAGE="Could not locate local installation archive.<br><br>File not found:<br>${ROON_OFFLINE_ARCHIVE}"
                     ;;
-            esac    
+            esac
         fi
     else
         ## Download RoonServer binary from roonlabs website
-        curl -s -O "${ROON_PKG_URL}"
+        STATUSCODE=$(curl --write-out '%{http_code}' -sLfO "$ROON_PKG_URL")
         R=$?
         if [ $R -ne 0 ]; then
             # Check domain, url, space on tmpdir and print error message
-            PKGDOMAIN=`echo "$ROON_PKG_URL" | awk -F/ '{print $3}'`
-            DOMAINCHECK=`/bin/curl -sL -w "%{http_code} %{url_effective}\\n" "$PKGDOMAIN" -o /dev/null | awk '{print $1}'`
             TMPSPACE=`/bin/df -Ph /tmp | tail -1 | awk '{print $4}'`
             wait 5;
             case $SYNOPKG_DSM_LANGUAGE in
                 enu)
-                    ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $DOMAINCHECK<br><b>Available space in /tmp:</b> $TMPSPACE"
+                    ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $STATUSCODE<br><b>Available space in /tmp:</b> $TMPSPACE"
                     ;;
                 ger)
-                    ERRORMESSAGE="Download benötigter Dateien von der Roon Labs Webseite ist fehlgeschlagen. Bitte prüfe deine Internetverbindung.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP Statuscode:</b> $DOMAINCHECK<br><b>Verfügbarer Speicher (/tmp):</b> $TMPSPACE"
+                    ERRORMESSAGE="Download benötigter Dateien von der Roon Labs Webseite ist fehlgeschlagen. Bitte prüfe deine Internetverbindung.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP Statuscode:</b> $STATUSCODE<br><b>Verfügbarer Speicher (/tmp):</b> $TMPSPACE"
                     ;;
                 *)
-                    ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $DOMAINCHECK<br><b>Available space in /tmp:</b> $TMPSPACE"
+                    ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $STATUSCODE<br><b>Available space in /tmp:</b> $TMPSPACE"
                     ;;
             esac
         fi

@@ -8,7 +8,7 @@ ROON_DATABASE_DIR="${ROON_DATABASE_SHARE_PATH}/RoonOnNAS"
 mkdir ${ROON_ROOT}/home/id
 ## Create config file for database location on first install
 
-if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
+if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ] || [ ! -f ${ROON_ROOT}/etc/RoonServer.ini ]; then
 	echo "[General]" > "${ROON_ROOT}/etc/RoonServer.ini"
 	echo "database_dir=$WIZARD_DATABASE_DIR" >> "${ROON_ROOT}/etc/RoonServer.ini"
 fi
@@ -26,8 +26,8 @@ if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonServer" ] && [ -d "$ROON_DATABASE_SHARE_
 	mv "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
 
 	# RAATServer folder
-    cp -R  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
-    mv  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
+	cp -R  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	mv  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
 
 	# RoonGoer folder (if exists)
 	if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonGoer" ]; then
