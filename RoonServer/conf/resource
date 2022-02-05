@@ -1,15 +1,17 @@
 {
    "data-share": {
       "shares": [{
-         "name": "{{WIZARD_DATABASE_DIR}}", 
-         "permission": {
-            "rw": ["RoonServer"]
-         }
-      },{
-         "name": "{{WIZARD_MUSIC_DIR}}", 
+         "name": "{{WIZARD_MUSIC_DIR}}",
          "permission": {
             "ro": ["RoonServer"]
-         }
+         },
+         "once": true
+      },{
+         "name": "{{WIZARD_DATABASE_DIR}}",
+         "permission": {
+            "rw": ["RoonServer"]
+         },
+         "once": true
       }]
    },
    "port-config": {
