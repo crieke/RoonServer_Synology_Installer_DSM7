@@ -1,20 +1,22 @@
 #!/bin/bash
 PreVer=$(echo "$SYNOPKG_OLD_PKGVER" | sed 's/[^0-9]//g')
 wizardFile="$(date +%s)_wizard.php"
+
+CONF="/var/packages/RoonServer/etc/RoonServer.ini";
+SHARE_CONF="/usr/syno/etc/share_right.map"
+
+HIDE_DB="FALSE"
+DB_DEFAULT="Please select"
+
+[ -f "§CONF" ] && exit 0 
+
+DBNAME=$(get_section_key_value "$CONF" General database_dir)
+ROON_DATABASE_SHARE_PATH=$(readlink "/var/packages/RoonServer/shares/$DBNAME")
+
+[ -d "$ROON_DATABASE_SHARE_PATH" ] && HIDE_DB="FALSE" && DB_DEFAULT="$DBNAME"
+
 /bin/cat > /tmp/$wizardFile <<EOF
 <?php
-
-\$conf_file = "/var/packages/RoonServer/etc/RoonServer.ini";
-if ( file_exists(\$conf_file) ) {
-  \$RoonServer_conf = parse_ini_file(\$conf_file);
-  \$value_dbPath = \$RoonServer_conf['database_dir'];
-  \$value_hide_dbPath = "TRUE";
-} else {
-  \$value_dbPath = "RoonServer";
-  \$value_hide_dbPath = "TRUE" ;
-}
-
-
 \$STEP1 = array(
     "step_title" => "Wo liegen deine Musikdateien?",
     "items" => [array(
@@ -25,8 +27,8 @@ if ( file_exists(\$conf_file) ) {
             "key" => "WIZARD_DATABASE_DIR",
             "desc" => "🗃️ - Speicherort Datenbank",
             "displayField" => "name",
-            "defaultValue" => "RoonServer",
-            "hidden" => TRUE,
+            "defaultValue" => "$DB_DEFAULT",
+            "hidden" => $HIDE_DB,
             "valueField" => "name",
             "forceSelection" => TRUE,
             "title" => "Datenbank Verzeichnis",
@@ -95,9 +97,8 @@ echo json_encode(\$WIZARD);
 EOF
 
 
-if [ $PreVer -le 20210308 ]; then
-    WIZARD_STEPS=$(/usr/bin/php -n /tmp/$wizardFile)
-    echo $WIZARD_STEPS > $SYNOPKG_TEMP_LOGFILE
-  rm /tmp/$wizardFile
-fi
+WIZARD_STEPS=$(/usr/bin/php -n /tmp/$wizardFile)
+echo $WIZARD_STEPS > $SYNOPKG_TEMP_LOGFILE
+rm /tmp/$wizardFile
+
 exit 0
