@@ -1,4 +1,24 @@
 #!/bin/sh
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # #       EXECUTION ORDER       # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                   |                                      |                                    #
+#   INSTALLATION                    |   UPGRADE                            |    UNINSTALLATION                  #
+#                                   |                                      |                                    #
+#      prereplace                   |      start-stop-status prestop       |      start-stop-status prestop     #
+#  ->  preinst                      |      start-stop-status stop          |      start-stop-status stop        #
+#      postinst                     |      preupgrade                      |      preuninst                     #
+#      postreplace                  |      preuninst                       |      postuninst                    #
+#      start-stop-status prestart   |      postuninst                      |                                    #
+#      start-stop-status start      |      prereplace                      |                                    #
+#                                   |  ->  preinst                         |                                    #
+#                                   |      postinst                        |                                    #
+#   START                           |      postreplace                     |                                    #
+#                                   |      postupgrade                     |                                    #
+#      start-stop-status prestart   |      start-stop-status prestart      |                                    #
+#      start-stop-status start      |      start-stop-status start         |                                    #
+#                                   |                                      |                                    #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 ## Download RoonServer files on initial setup (not on upgrade)
 if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then

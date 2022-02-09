@@ -1,6 +1,26 @@
 #!/bin/sh
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # #       EXECUTION ORDER       # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                   |                                      |                                    #
+#   INSTALLATION                    |   UPGRADE                            |    UNINSTALLATION                  #
+#                                   |                                      |                                    #
+#      prereplace                   |      start-stop-status prestop       |      start-stop-status prestop     #
+#      preinst                      |      start-stop-status stop          |      start-stop-status stop        #
+#      postinst                     |  ->  preupgrade                      |      preuninst                     #
+#      postreplace                  |      preuninst                       |      postuninst                    #
+#      start-stop-status prestart   |      postuninst                      |                                    #
+#      start-stop-status start      |      prereplace                      |                                    #
+#                                   |      preinst                         |                                    #
+#                                   |      postinst                        |                                    #
+#   START                           |      postreplace                     |                                    #
+#                                   |      postupgrade                     |                                    #
+#      start-stop-status prestart   |      start-stop-status prestart      |                                    #
+#      start-stop-status start      |      start-stop-status start         |                                    #
+#                                   |                                      |                                    #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-	## Move RoonServer executable files to temp dir. These will be updated by the RoonServer application itself
+## Move RoonServer executable files to temp dir. These will be updated by the RoonServer application itself
 mv ${SYNOPKG_PKGDEST}/RoonServer ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer
  
 exit 0

@@ -1,9 +1,29 @@
 #!/bin/sh
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # #       EXECUTION ORDER       # # # # # # # # # # # # # # # # # # # # # # #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#                                   |                                      |                                    #
+#   INSTALLATION                    |   UPGRADE                            |    UNINSTALLATION                  #
+#                                   |                                      |                                    #
+#      prereplace                   |      start-stop-status prestop       |      start-stop-status prestop     #
+#      preinst                      |      start-stop-status stop          |      start-stop-status stop        #
+#  ->  postinst                     |      preupgrade                      |      preuninst                     #
+#      postreplace                  |      preuninst                       |      postuninst                    #
+#      start-stop-status prestart   |      postuninst                      |                                    #
+#      start-stop-status start      |      prereplace                      |                                    #
+#                                   |      preinst                         |                                    #
+#                                   |  ->  postinst                        |                                    #
+#   START                           |      postreplace                     |                                    #
+#                                   |      postupgrade                     |                                    #
+#      start-stop-status prestart   |      start-stop-status prestart      |                                    #
+#      start-stop-status start      |      start-stop-status start         |                                    #
+#                                   |                                      |                                    #
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 ROON_ROOT="/var/packages/RoonServer"
 
 SHARE_CONF="/usr/syno/etc/share_right.map"
 
-# Check if RoonServer.ini exists, if not use values from Wizard
 if [ -f "$ROON_ROOT/etc/RoonServer.ini" ]; then
 	DB_DIR=$(get_section_key_value "$ROON_ROOT/etc/RoonServer.ini" "General" "database_dir")
 else
