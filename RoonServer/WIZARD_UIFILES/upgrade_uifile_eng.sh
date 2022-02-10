@@ -8,7 +8,7 @@ SHARE_CONF="/usr/syno/etc/share_right.map"
 HIDE_DB="FALSE"
 DB_DEFAULT="Please select"
 
-[ -f "§CONF" ] &% exit 0 
+[ -f "§CONF" ] && exit 0 
 
 DBNAME=$(get_section_key_value "$CONF" General database_dir)
 ROON_DATABASE_SHARE_PATH=$(readlink "/var/packages/RoonServer/shares/$DBNAME")
