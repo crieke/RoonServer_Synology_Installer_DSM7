@@ -14,6 +14,7 @@ fi
 # Default Wizard Variables
 HIDE_DB="FALSE"
 DB_DEFAULT="Please select"
+DB_DESC_TEXT=="Die Aktualisierung konnte deine Freigabe für die Roon Server Datenbank nicht lokalisieren. Bitte lege sie erneut fest."
 
 # check for dsm6 versions without ini file.
 PreVer=$(echo "$SYNOPKG_OLD_PKGVER" | sed 's/[^0-9]//g')
@@ -23,7 +24,7 @@ SHARE_CONF="/usr/syno/etc/share_right.map"
 ## Hide database selection if path could be located
 if [ $PreVer -le 20210308 ]; then
   dsm6Path=$(get_section_key_value "$SHARE_CONF" RoonServer path || get_section_key_value "$SHARE_CONF" RoonServer guid )
-  [ -z $dsm6Path ] && DB_DEFAULT="RoonServer" && HIDE_DB="TRUE"
+  [ -z $dsm6Path ] && DB_DEFAULT="RoonServer" && HIDE_DB="TRUE" && DB_DESC_TEXT="Deine RoonServer Datenbank konnte automatisch identifiziert werden."
 fi
 
 ## Create php file to write json file
@@ -33,7 +34,7 @@ fi
     "step_title" => "Wo liegen deine Musikdateien?",
     "items" => [array(
         "type" => "combobox",
-        "desc" => "Deine RoonServer Datenbank konnte automatisch identifiziert werden. In welchem Freigabeordner befinden sich deine Musikdateien?<br>Roon Server erhält während der Installation Leserechte, damit du in Roon auf sie zugreifen kannst.<br>",
+        "desc" => "$DB_DESC_TEXT Wähle noch deinen Freigabeordner, auf dem sich deine deine Musikdateien befinden.<br>Roon Server erhält dadurch Leserechte, sodass Roon auf sie zugreifen kann.<br>",
         "invalid_next_disabled_v2" => TRUE,
         "subitems" => [array(
             "key" => "WIZARD_DATABASE_DIR",
