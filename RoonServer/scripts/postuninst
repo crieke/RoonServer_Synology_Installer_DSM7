@@ -22,5 +22,5 @@
 
 #Remove RoonServer config file
 ROON_ROOT="/var/packages/$SYNOPKG_PKGNAME"
-[ -f "$ROON_ROOT/etc/RoonServer.ini" ] && rm "$ROON_ROOT/etc/RoonServer.ini"
+[ "${SYNOPKG_PKG_STATUS}" == "UNINSTALL" ] && [ -f "$ROON_ROOT/etc/RoonServer.ini" ] && rm "$ROON_ROOT/etc/RoonServer.ini"
 exit 0
