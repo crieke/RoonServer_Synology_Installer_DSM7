@@ -20,9 +20,7 @@
 #                                   |                                      |                                    #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-# Delete Package directory if it contains nothing.
-if [ ! -d "$(ls -A /usr/syno/etc/packages/RoonServer" ]; then
-    rm -Rf /usr/syno/etc/packages/RoonServer
-fi
-
+#Remove RoonServer config file
+ROON_ROOT="/var/packages/$SYNOPKG_PKGNAME"
+[ -f "$ROON_ROOT/etc/RoonServer.ini" ] && rm "$ROON_ROOT/etc/RoonServer.ini"
 exit 0

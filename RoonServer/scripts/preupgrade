@@ -22,5 +22,5 @@
 
 ## Move RoonServer executable files to temp dir. These will be updated by the RoonServer application itself
 mv ${SYNOPKG_PKGDEST}/RoonServer ${SYNOPKG_PKGINST_TEMP_DIR}/RoonServer
- 
+
 exit 0

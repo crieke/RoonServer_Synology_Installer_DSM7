@@ -22,11 +22,9 @@
 
 ## Download RoonServer files on initial setup (not on upgrade)
 if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
-    # Package
-    PACKAGE="RoonServer"
 
     # Others
-    SSS="/var/packages/${PACKAGE}/scripts/start-stop-status"
+    SSS="/var/packages/${SYNOPKG_PKGNAME}/scripts/start-stop-status"
     ROON_PKG_URL="http://download.roonlabs.com/builds/RoonServer_linuxx64.tar.bz2"
     ROON_ARCHIVE="${ROON_PKG_URL##*/}"
     R=0

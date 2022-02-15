@@ -19,14 +19,14 @@
 #  ->  start-stop-status start      |  ->  start-stop-status start         |                                    #
 #                                   |                                      |                                    #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
 # Package
-PACKAGE="RoonServer"
 DNAME="Roon Server"
-SPK_ROOT="/var/packages/${PACKAGE}"
+SPK_ROOT="/var/packages/${SYNOPKG_PKGNAME}"
 SPK_ETC="${SPK_ROOT}/etc"
-ROON_ID_DIR="${SPK_ROOT}/home/id/"
+ROON_ID_DIR="${SYNOPKG_PKGHOME}/id/"
 ROON_TMP_DIR="${SPK_ROOT}/tmp"
-ROON_DATABASE_SHARE="$(get_section_key_value $SPK_ETC/RoonServer.ini General database_dir)"
+ROON_DATABASE_SHARE="$(get_section_key_value ${SPK_ETC}/RoonServer.ini General database_dir)"
 ROON_DATABASE_SHARE_PATH="${SPK_ROOT}/shares/${ROON_DATABASE_SHARE}" 
 ROON_DATABASE_DIR="${ROON_DATABASE_SHARE_PATH}/RoonOnNAS"
 ROON_LOG_FILE="${ROON_DATABASE_DIR}/RoonOnNAS.log.txt"
@@ -36,8 +36,6 @@ SYNO_MODEL="$(cat /proc/sys/kernel/syno_hw_version)"
 SYNO_VERSION="$(get_key_value /etc.defaults/VERSION productversion)"
 SYNO_BUILD="$(get_key_value /etc.defaults/VERSION buildnumber)"
 SYNO_SMALL_FIX="$(get_key_value /etc.defaults/VERSION smallfixnumber)"
-SYNO_SPK_VER="$(get_key_value /var/packages/RoonServer/INFO version)"
-SYNO_SPK_VER=`cat /var/packages/${PACKAGE}/INFO | grep "version=" | cut -d "\"" -f 2`
 ROON_VERSION=`cat "${SPK_ROOT}/target/RoonServer/VERSION"`
 MTU=`ifconfig | grep eth[0-9] -A1 | grep MTU | cut -d ":" -f 2 | awk '{print $1}' | xargs | sed "s/ ---- /\n---- /g"`
 ROON_ARGS="-noraatserver"
@@ -77,7 +75,7 @@ info ()
     echolog "Model" "${SYNO_MODEL}"
     echolog "Architecture" "${ARCH}"
     echolog "DSM Version" "${SYNO_VERSION} ${SYNO_SMALL_FIX}"
-    echolog "PKG Version" "${SYNO_SPK_VER}"
+    echolog "PKG Version" "${SYNOPKG_PKGVER}"
     echolog "Hostname" "${HOSTNAME}"
     echolog "MTU" "${MTU}"
 }

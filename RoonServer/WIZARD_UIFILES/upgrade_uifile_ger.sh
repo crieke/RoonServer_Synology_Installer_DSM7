@@ -1,20 +1,32 @@
 #!/bin/bash
-PreVer=$(echo "$SYNOPKG_OLD_PKGVER" | sed 's/[^0-9]//g')
 wizardFile="$(date +%s)_wizard.php"
 
-CONF="/var/packages/RoonServer/etc/RoonServer.ini";
-SHARE_CONF="/usr/syno/etc/share_right.map"
+# Set config path. Revert to home etc dir if ini is not in target etc
+CONF="/var/packages/RoonServer/etc/RoonServer.ini"
 
+# Hide wizard if RoonServer.ini exists and has a valid share entry
+if [ -f "$CONF" ]; then
+  DBNAME=$(get_section_key_value "$CONF" General database_dir)
+  ROON_DATABASE_SHARE_PATH=$(readlink "/var/packages/RoonServer/shares/$DBNAME")
+ [ -d "$ROON_DATABASE_SHARE_PATH" ] && exit 0
+fi 
+
+# Default Wizard Variables
 HIDE_DB="FALSE"
 DB_DEFAULT="Please select"
 
-[ -f "§CONF" ] && exit 0 
+# check for dsm6 versions without ini file.
+PreVer=$(echo "$SYNOPKG_OLD_PKGVER" | sed 's/[^0-9]//g')
+SHARE_CONF="/usr/syno/etc/share_right.map"
 
-DBNAME=$(get_section_key_value "$CONF" General database_dir)
-ROON_DATABASE_SHARE_PATH=$(readlink "/var/packages/RoonServer/shares/$DBNAME")
+## Check if previous Version is a DSM6 install and check its fixed RoonServer shared folder path
+## Hide database selection if path could be located
+if [ $PreVer -le 20210308 ]; then
+  dsm6Path=$(get_section_key_value "$SHARE_CONF" RoonServer path || get_section_key_value "$SHARE_CONF" RoonServer guid )
+  [ -z $dsm6Path ] && DB_DEFAULT="RoonServer" && HIDE_DB="TRUE"
+fi
 
-[ -d "$ROON_DATABASE_SHARE_PATH" ] && HIDE_DB="FALSE" && DB_DEFAULT="$DBNAME"
-
+## Create php file to write json file
 /bin/cat > /tmp/$wizardFile <<EOF
 <?php
 \$STEP1 = array(

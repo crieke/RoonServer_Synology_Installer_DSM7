@@ -20,9 +20,11 @@
 #                                   |                                      |                                    #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-ROON_ROOT="/var/packages/RoonServer"
+ROON_ROOT="/var/packages/$SYNOPKG_PKGNAME"
 
 SHARE_CONF="/usr/syno/etc/share_right.map"
+
+[ ! -z "$WIZARD_DATABASE_DIR" ] && [ -f "$ROON_ROOT/etc/RoonServer.ini" ] && set_section_key_value "$ROON_ROOT/etc/RoonServer.ini" "General" "database_dir" "$WIZARD_DATABASE_DIR" 
 
 if [ -f "$ROON_ROOT/etc/RoonServer.ini" ]; then
 	DB_DIR=$(get_section_key_value "$ROON_ROOT/etc/RoonServer.ini" "General" "database_dir")
@@ -30,16 +32,17 @@ else
 	DB_DIR=$WIZARD_DATABASE_DIR
 fi
 
-$ROON_DATABASE_SHARE_PATH="${ROON_ROOT}/shares/${DB_DIR}"
+ROON_DATABASE_SHARE_PATH="${ROON_ROOT}/shares/${DB_DIR}"
 ROON_DATABASE_DIR="${ROON_DATABASE_SHARE_PATH}/RoonOnNAS"
 
 ## Create directory for Roon ID
-mkdir ${ROON_ROOT}/home/id
-## Create config file for database location on first install
+[ -d "${ROON_ROOT}/home/id" ] || mkdir ${ROON_ROOT}/home/id
 
-if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ] || [ ! -f ${ROON_ROOT}/etc/RoonServer.ini ]; then
-	echo "[General]" > "${ROON_ROOT}/etc/RoonServer.ini"
-	echo "database_dir=$WIZARD_DATABASE_DIR" >> "${ROON_ROOT}/etc/RoonServer.ini"
+
+# Create config file for database location on first install
+if [ ! -z "$DB_DIR" ] && [ ! -f "$ROON_ROOT/etc/RoonServer.ini" ]; then
+	echo "[General]" > "$ROON_ROOT/etc/RoonServer.ini"
+	echo "database_dir=$WIZARD_DATABASE_DIR" >> "$ROON_ROOT/etc/RoonServer.ini"
 fi
 
 ##Check if Roon Server database exists in chosen db-path
