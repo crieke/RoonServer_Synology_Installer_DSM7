@@ -104,7 +104,14 @@ start_daemon ()
         
         # check if ffmpeg exists and is executable
         [ -f "${ROON_DATABASE_DIR}/bin/ffmpeg" ] && [ ! -x "${ROON_DATABASE_DIR}/bin/ffmpeg" ] && chmod +x "${ROON_DATABASE_DIR}/bin/ffmpeg" 
+
         echolog "ffmpeg" "$(which ffmpeg)"
+
+        echo  "" | tee -a "${ROON_LOG_FILE}"
+        echo  "########## Installed ffmpeg Version #############" | tee -a "${ROON_LOG_FILE}"
+        echo -e $(ffmpeg -version) | tee -a "$ROON_LOG_FILE"
+        echo "#################################################" | tee -a "$ROON_LOG_FILE"
+        echo  "" | tee -a "${ROON_LOG_FILE}"
         
         # Roon tries on launch to set open files limit to 8096. This will fail due to its hard limit. So we are increasing it to the max possible value...
         openFilesHardLimit=$(ulimit -Hn)
