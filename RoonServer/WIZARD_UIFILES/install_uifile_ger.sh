@@ -1,6 +1,7 @@
 #!/bin/bash
 currentDir="$(dirname "$0")"
 wizardFile="$(date +%s)_wizard.php"
+
 /bin/cat > /tmp/$wizardFile <<EOF
 <?php
 
@@ -90,6 +91,15 @@ wizardFile="$(date +%s)_wizard.php"
             "desc" => "Offline-Installation",
             "defaultValue" => false
           )]
+    ), array( 
+        "type" => "multiselect",
+        "desc" => "",
+        "subitems" => [array(
+           "key" => "WIZARD_DEBUG",
+           "hidden" => false,
+           "desc" => "Installations log erstellen?",
+           "defaultValue" => false   
+        )]
     )]
 );
 
@@ -108,5 +118,6 @@ WIZARD_STEPS=$(/usr/bin/php -n /tmp/$wizardFile)
 if [ ${#WIZARD_STEPS} -gt 5 ]; then
     echo $WIZARD_STEPS > $SYNOPKG_TEMP_LOGFILE
 fi
-  rm /tmp/$wizardFile
+## remove temp php file
+rm /tmp/$wizardFile
 exit 0
