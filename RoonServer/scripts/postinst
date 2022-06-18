@@ -20,58 +20,218 @@
 #                                   |                                      |                                    #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
-ROON_ROOT="/var/packages/$SYNOPKG_PKGNAME"
+if [ "$WIZARD_DEBUG" = true ]; then
+   DEBUGFILE="$(mktemp /tmp/Roon.XXXXXXXXX.log.txt)"
+else
+   DEBUGFILE="/dev/null"
+fi
 
+$WIZARD_DEBUG && echo "*** Show all variables at stage  ***" >> "${DEBUGFILE}"
+$WIZARD_DEBUG && declare -xp  >> "${DEBUGFILE}"
+$WIZARD_DEBUG && echo "************************************" >> "${DEBUGFILE}"
+$WIZARD_DEBUG && echo "" >> "${DEBUGFILE}"
+
+ROON_ROOT="/var/packages/$SYNOPKG_PKGNAME"
 SHARE_CONF="/usr/syno/etc/share_right.map"
 
-[ ! -z "$WIZARD_DATABASE_DIR" ] && [ -f "$ROON_ROOT/etc/RoonServer.ini" ] && set_section_key_value "$ROON_ROOT/etc/RoonServer.ini" "General" "database_dir" "$WIZARD_DATABASE_DIR" 
+## Download RoonServer files on initial setup (not on upgrade)
+	$WIZARD_DEBUG && echo "PKG STATUS: $SYNOPKG_PKG_STATUS" >> "${DEBUGFILE}"
+if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
+	$WIZARD_DEBUG && echo "Install is not Upgrade." >> "${DEBUGFILE}"
 
+	# Others
+	SSS="/var/packages/${SYNOPKG_PKGNAME}/scripts/start-stop-status"
+	ROON_PKG_URL="http://download.roonlabs.com/builds/RoonServer_linuxx64.tar.bz2"
+	ROON_ARCHIVE="${ROON_PKG_URL##*/}"
+	R=0
+	$WIZARD_DEBUG && echo "ROON_PKG_URL: $ROON_PKG_URL" >> "${DEBUGFILE}"
+	$WIZARD_DEBUG && echo "ROON_ARCHIVE: $ROON_ARCHIVE" >> "${DEBUGFILE}"
+
+	## Check if RoonServer tar.bz is provided manually in database dir
+	## Get path from share_right.map as App Folder (../RoonServer/shares is not yet created.
+	SHARE_CONF="/usr/syno/etc/share_right.map"
+	$WIZARD_DEBUG && echo "SHARE_CONF: $SHARE_CONF" >> "${DEBUGFILE}"
+	
+	## function: if no path key is in the share section, check for guid section (relevant for esata/usb shares)
+	check_esatashare_path() {
+		ROON_DATABASE_SHARE_GUID=$(get_section_key_value "$SHARE_CONF" "$WIZARD_DATABASE_DIR" "guid") || exit
+		$WIZARD_DEBUG && echo "ROON_DATABASE_SHARE_GUID: $ROON_DATABASE_SHARE_GUID" >> "${DEBUGFILE}"
+		ROON_DATABASE_SHARE_PATH=$(get_section_key_value "$SHARE_CONF" "$ROON_DATABASE_SHARE_GUID" "path") || exit
+		$WIZARD_DEBUG && echo "ROON_DATABASE_SHARE_PATH: $ROON_DATABASE_SHARE_PATH" >> "${DEBUGFILE}"
+	}
+	
+	## check path of selected database share. if it fails, run esatashare function
+	ROON_DATABASE_SHARE_PATH=$(get_section_key_value "$SHARE_CONF" "$WIZARD_DATABASE_DIR" "path") || check_esatashare_path
+	$WIZARD_DEBUG && echo "ROON_DATABASE_SHARE_PATH: $ROON_DATABASE_SHARE_PATH" >> "${DEBUGFILE}"
+	
+	ROON_OFFLINE_ARCHIVE="${ROON_DATABASE_SHARE_PATH}/${ROON_ARCHIVE}"
+	$WIZARD_DEBUG && echo "ROON_OFFLINE_ARCHIVE: $ROON_OFFLINE_ARCHIVE" >> "${DEBUGFILE}"
+	## Create tmp directory
+	tmp_dir=$(mktemp -d -t RoonServer-XXXXXXXXXX)
+	$WIZARD_DEBUG && echo "tmp_dir: $tmp_dir" >> "${DEBUGFILE}"
+
+	pushd "${tmp_dir}" > /dev/null
+
+	## Getting binary file and extract it to unique tmp directory
+	if $OFFLINEINSTALL ; then
+	$WIZARD_DEBUG && echo "OFFLINEINSTALL: true" >> "${DEBUGFILE}"
+		if [ -f "${ROON_OFFLINE_ARCHIVE}" ]; then
+		$WIZARD_DEBUG && echo "ROON_OFFLINE_ARCHIVE: found at $ROON_OFFLINE_ARCHIVE" >> "${DEBUGFILE}"
+			cp "${ROON_OFFLINE_ARCHIVE}" "${tmp_dir}"/ >> "${DEBUGFILE}"
+			R=$?
+				if [ $R -ne 0 ]; then
+					case $SYNOPKG_DSM_LANGUAGE in
+						enu)
+							ERRORMESSAGE="<br>Local installation archive in database directory could not been copied to the tmp directory."
+							;;
+						ger)
+							ERRORMESSAGE="<br>Lokale Installationsdatei konnte nicht ins temporäre Verzeichnis (/tmp) kopiert werden."
+							;;
+						*)
+							ERRORMESSAGE="<br>Local installation archive in database directory could not been copied to the tmp directory."
+							;;
+						esac
+				fi
+		else			
+			R=1
+			case $SYNOPKG_DSM_LANGUAGE in
+				enu)
+					ERRORMESSAGE="Could not locate local installation archive.<br><br>File not found:<br>${ROON_OFFLINE_ARCHIVE}"
+					;;
+				ger)
+					ERRORMESSAGE="Es wurde keine lokale Installationsdatei gefunden.<br><br>Datei nicht gefunden:<br>${ROON_OFFLINE_ARCHIVE}"
+					;;
+				*)
+					ERRORMESSAGE="Could not locate local installation archive.<br><br>File not found:<br>${ROON_OFFLINE_ARCHIVE}"
+					;;
+			esac
+		fi
+	else
+		## Download RoonServer binary from roonlabs website
+		STATUSCODE=$(curl --write-out '%{http_code}' -sLfO "$ROON_PKG_URL")
+		R=$?
+		if [ $R -ne 0 ]; then
+			# Check domain, url, space on tmpdir and print error message
+			TMPSPACE=`/bin/df -Ph /tmp | tail -1 | awk '{print $4}'`
+			wait 5;
+			case $SYNOPKG_DSM_LANGUAGE in
+				enu)
+					ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $STATUSCODE<br><b>Available space in /tmp:</b> $TMPSPACE"
+					;;
+				ger)
+					ERRORMESSAGE="Download benötigter Dateien von der Roon Labs Webseite ist fehlgeschlagen. Bitte prüfe deine Internetverbindung.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP Statuscode:</b> $STATUSCODE<br><b>Verfügbarer Speicher (/tmp):</b> $TMPSPACE"
+					;;
+				*)
+					ERRORMESSAGE="Could not download installation archive from Roon Labs website. Please check your internet connection.<br><b>URL:</b> $ROON_PKG_URL<br><b>HTTP status code:</b> $STATUSCODE<br><b>Available space in /tmp:</b> $TMPSPACE"
+					;;
+			esac
+		fi
+	fi
+
+	## Go on and extract the tar.bz2 file, if there has been no error
+	if [ $R -eq 0 ]; then
+		$WIZARD_DEBUG && echo "Extract archive..." >> "${DEBUGFILE}"
+		$WIZARD_DEBUG && echo "Extract file ${tmp_dir}/${ROON_ARCHIVE} to ${SYNOPKG_PKGDEST}" >> "${DEBUGFILE}"
+		$WIZARD_DEBUG && echo "tar location:" $(which tar) >> "${DEBUGFILE}"
+		tar xjf "${tmp_dir}/${ROON_ARCHIVE}" -C "${SYNOPKG_PKGDEST}" >> "${DEBUGFILE}"
+		R=$?
+		if [ $R -ne 0 ]; then
+			case $SYNOPKG_DSM_LANGUAGE in
+				enu)
+					ERRORMESSAGE="An error occured while extracting the installation archive. The archive might be corrupt or the tmp directory has no space left."
+					;;
+				ger)
+					ERRORMESSAGE="Es ist ein Fehler beim Entpacken des geladenen Roon Server Datei aufgetreten. Die Datei ist entweder beschädigt oder es ist nicht ausreichend freier Speicherplatz im tmp Verzeichnis verfügbar."
+					;;
+				*)
+					ERRORMESSAGE="An error occured while extracting the installation archive. The archive might be corrupt or the tmp directory has no space left."
+					;;
+			esac
+		fi
+	fi
+	rm -R "${tmp_dir}"
+	popd > /dev/null
+fi
+
+if [ $R -ne 0 ]; then
+	$WIZARD_DEBUG && echo "Throwing error message in ui." >> "${DEBUGFILE}"
+	echo "$ERRORMESSAGE" > $SYNOPKG_TEMP_LOGFILE
+fi
+
+
+if [ ! -z "$WIZARD_DATABASE_DIR" ] && [ -f "$ROON_ROOT/etc/RoonServer.ini" ]; then
+	$WIZARD_DEBUG && echo "No database dir in Wizard - RoonServer.ini file detected instead." >> "${DEBUGFILE}"
+	set_section_key_value "$ROON_ROOT/etc/RoonServer.ini" "General" "database_dir" "$WIZARD_DATABASE_DIR" 
+fi
+	
 if [ -f "$ROON_ROOT/etc/RoonServer.ini" ]; then
 	DB_DIR=$(get_section_key_value "$ROON_ROOT/etc/RoonServer.ini" "General" "database_dir")
+	$WIZARD_DEBUG && echo "Reading DB path from RoonServer.ini: $DB_DIR" >> "${DEBUGFILE}"
 else
 	DB_DIR=$WIZARD_DATABASE_DIR
+	$WIZARD_DEBUG && echo "Using database path from Install Wizard: $DB_DIR" >> "${DEBUGFILE}"
 fi
 
 ROON_DATABASE_SHARE_PATH="${ROON_ROOT}/shares/${DB_DIR}"
 ROON_DATABASE_DIR="${ROON_DATABASE_SHARE_PATH}/RoonOnNAS"
 
 ## Create directory for Roon ID
-[ -d "${ROON_ROOT}/home/id" ] || mkdir ${ROON_ROOT}/home/id
-
+if [ ! -d "${ROON_ROOT}/home/id" ]; then
+	$WIZARD_DEBUG && echo "Create id directory at: $ROON_ROOT/home/" >> "${DEBUGFILE}"
+	mkdir ${ROON_ROOT}/home/id
+fi
 
 # Create config file for database location on first install
 if [ ! -z "$DB_DIR" ] && [ ! -f "$ROON_ROOT/etc/RoonServer.ini" ]; then
+	$WIZARD_DEBUG && echo "Create RoonServer.ini file at: $ROON_ROOT/etc/" >> "${DEBUGFILE}"
 	echo "[General]" > "$ROON_ROOT/etc/RoonServer.ini"
 	echo "database_dir=$WIZARD_DATABASE_DIR" >> "$ROON_ROOT/etc/RoonServer.ini"
 fi
 
 ##Check if Roon Server database exists in chosen db-path
 if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonServer" ] && [ -d "$ROON_DATABASE_SHARE_PATH/RAATServer" ] && [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ]; then ## Add check if shared folder is "RoonServer" as well!
+	$WIZARD_DEBUG && echo "Pre-DSM7 database detected." >> "${DEBUGFILE}"
+	$WIZARD_DEBUG && echo "Creating RoonOnNAS dir." >> "${DEBUGFILE}"
 	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
+	$WIZARD_DEBUG && echo "Creating RoonOnNAS/bin dir." >> "${DEBUGFILE}"
 	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
+	$WIZARD_DEBUG && echo "Creating DSM6_RoonServer_Database_Backup dir for Roon's old DSM6 database." >> "${DEBUGFILE}"
 	mkdir "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup"
 
 	# Copy old database files to RoonOnNAS directory to be the owner of the files. Then move it to DSM6_RoonServer_Database_Backup folder.
+	$WIZARD_DEBUG && echo "Copy old database files to RoonOnNAS directory to gain ownership of the files." >> "${DEBUGFILE}"
 
 	# RoonServer folder
+	$WIZARD_DEBUG && echo "Copying RoonServer dir to: $ROON_DATABASE_SHARE_PATH/RoonOnNAS/" >> "${DEBUGFILE}"
 	cp -R "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	$WIZARD_DEBUG && echo "Moving RoonServer dir to: $ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/" >> "${DEBUGFILE}"
 	mv "$ROON_DATABASE_SHARE_PATH/RoonServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
 
 	# RAATServer folder
+	$WIZARD_DEBUG && echo "Copying RAATServer dir to: $ROON_DATABASE_SHARE_PATH/RoonOnNAS/" >> "${DEBUGFILE}"
 	cp -R  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+	$WIZARD_DEBUG && echo "Moving RAATServer dir to: $ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/" >> "${DEBUGFILE}"
 	mv  "$ROON_DATABASE_SHARE_PATH/RAATServer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
 
 	# RoonGoer folder (if exists)
 	if  [ -d "$ROON_DATABASE_SHARE_PATH/RoonGoer" ]; then
+		$WIZARD_DEBUG && echo "RoonGoer directory exists at: $ROON_DATABASE_SHARE_PATH/RoonGoer. Copying it to new RoonOnNAS dir." >> "${DEBUGFILE}"
 		cp -R "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/"
+		$WIZARD_DEBUG && echo "Moving RoonGoer to: $ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup" >> "${DEBUGFILE}"
 		mv "$ROON_DATABASE_SHARE_PATH/RoonGoer" "$ROON_DATABASE_SHARE_PATH/DSM6_RoonServer_Database_Backup/"
 	fi
 fi
 
 # Create required directories, if they don't exist
-[ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
-[ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin" ] && mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
+if [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS" ]; then
+	$WIZARD_DEBUG && echo "Creating RoonOnNAS dir at: $ROON_DATABASE_SHARE_PATH" >> "${DEBUGFILE}"
+	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS"
+fi
 
+if [ ! -d "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin" ]; then
+	$WIZARD_DEBUG && echo "Creating bin dir at: $ROON_DATABASE_SHARE_PATH/RoonOnNAS" >> "${DEBUGFILE}"
+	mkdir "$ROON_DATABASE_SHARE_PATH/RoonOnNAS/bin"
+fi
 
 ## Writing folder info txt files
 case $SYNOPKG_DSM_LANGUAGE in
@@ -163,6 +323,11 @@ if [ "${SYNOPKG_PKG_STATUS}" != "UPGRADE" ]; then
 	  ;;
 	esac
   fi
-exit 0
 
+if [ "$WIZARD_DEBUG" = true ]; then
+	cp "${DEBUGFILE}" "${ROON_DATABASE_SHARE_PATH}/RoonOnNAS/Roon_Install_"$(date +%s)".log.txt"
+	rm "${DEBUGFILE}"
+fi
+
+exit 0
 
