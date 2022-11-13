@@ -99,6 +99,7 @@ start_daemon ()
         export ROON_DATAROOT=${ROON_DATABASE_DIR}
         export ROON_INSTALL_TMPDIR="${ROON_TMP_DIR}"
         export TMP="${ROON_TMP_DIR}"
+        export TMPDIR="${ROON_TMP_DIR}"
         export PATH=${ROON_DATABASE_DIR}/bin:$PATH
         export ROON_ID_DIR
         
